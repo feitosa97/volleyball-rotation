@@ -16,5 +16,5 @@ export const rotacao03Saque: RotationStepConfig = {
     4: { x: 50, y: 12 },
     2: { x: 85, y: 12 },
   },
-  notes: ['Pedir pra ponta cobrir posição 5'],
+  notes: ['Pedir pra ponta cobrir posição 5.'],
 }

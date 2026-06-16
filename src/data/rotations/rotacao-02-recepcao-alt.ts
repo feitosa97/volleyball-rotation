@@ -18,5 +18,5 @@ export const rotacao02RecepcaoAlt: RotationStepConfig = {
     2: { x: 50, y: 23 },
     3: { x: 8, y: 23 },
   },
-  notes: ['Oposto(a) inverte com ponteiro(a)'],
+  notes: ['Oposto(a) inverte com ponteiro(a).'],
 }

@@ -17,5 +17,5 @@ export const rotacao03Recepcao: RotationStepConfig = {
     4: { x: 90, y: 32 },
     6: { x: 80, y: 65 },
   },
-  notes: ['Posição triangulo'],
+  notes: ['Posição triangulo.'],
 }

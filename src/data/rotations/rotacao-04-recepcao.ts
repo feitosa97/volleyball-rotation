@@ -17,5 +17,5 @@ export const rotacao04Recepcao: RotationStepConfig = {
     2: { x: 20, y: 65 },
     3: { x: 12, y: 22 },
   },
-  notes: ['Posição "casinha"', "Levantador(a) atrás do(a) central"],
+  notes: ['Posição "casinha".', "Levantador(a) atrás do(a) central."],
 }

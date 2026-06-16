@@ -17,5 +17,5 @@ export const rotacao06Recepcao: RotationStepConfig = {
     5: { x: 65, y: 85 },
     2: { x: 75, y: 14 },
   },
-  notes: ['Central infiltra pela direita', 'Oposto(a) à esquera do(a) ponteiro(a) '],
+  notes: ['Central infiltra pela direita.', 'Oposto(a) à esquera do(a) ponteiro(a).'],
 }

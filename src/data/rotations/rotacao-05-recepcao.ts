@@ -17,5 +17,5 @@ export const rotacao05Recepcao: RotationStepConfig = {
     3: { x: 12, y: 12 },
     4: { x: 80, y: 65 },
   },
-  notes: ['Levantador penetra da esquerda'],
+  notes: ['Levantador penetra da esquerda.'],
 }

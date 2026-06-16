@@ -18,5 +18,5 @@ export const rotacao01Recepcao: RotationStepConfig = {
     3: { x: 12, y: 12 },
     4: { x: 36, y: 75 },
   },
-  notes: ['Levantador(a) recua para levantar da zona 1', 'Oposto(a) ataca pela fundo direita'],
+  notes: ['Levantador(a) recua para levantar da zona 1.', 'Oposto(a) ataca pela fundo direita.'],
 }

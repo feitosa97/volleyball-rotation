@@ -17,5 +17,5 @@ export const rotacao02Recepcao: RotationStepConfig = {
     2: { x: 12, y: 33 },
     3: { x: 8, y: 12 },
   },
-  notes: ['Oposto(a) corre para Posição 2 após saque'],
+  notes: ['Oposto(a) corre para Posição 2 após saque.'],
 }

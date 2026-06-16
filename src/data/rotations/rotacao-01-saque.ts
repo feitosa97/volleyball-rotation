@@ -17,5 +17,5 @@ export const rotacao01Saque: RotationStepConfig = {
     3: { x: 50, y: 12 },
     4: { x: 85, y: 12 },
   },
-  notes: ['Ponteiro(a) e Oposto(a) atacam invertidos(as)'],
+  notes: ['Ponteiro(a) e Oposto(a) atacam invertidos(as).'],
 }
