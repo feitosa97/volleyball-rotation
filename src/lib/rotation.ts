@@ -87,16 +87,18 @@ export function getEffectivePlayer(
   position: CourtPosition,
   players: Player[],
   liberoId: string | null,
+  applyLibero = true,
 ): { player: Player; isLiberoSub: boolean; replacedPlayer: Player | null } | null {
   const player = getPlayerAtPosition(lineup, position, players)
   if (!player) return null
 
-  const liberoReplacementPos = getLiberoReplacementPosition(lineup, players, liberoId)
-
-  if (shouldLiberoEnter(player, position, liberoId, liberoReplacementPos)) {
-    const libero = players.find((p) => p.id === liberoId)
-    if (libero) {
-      return { player: libero, isLiberoSub: true, replacedPlayer: player }
+  if (applyLibero) {
+    const liberoReplacementPos = getLiberoReplacementPosition(lineup, players, liberoId)
+    if (shouldLiberoEnter(player, position, liberoId, liberoReplacementPos)) {
+      const libero = players.find((p) => p.id === liberoId)
+      if (libero) {
+        return { player: libero, isLiberoSub: true, replacedPlayer: player }
+      }
     }
   }
 
@@ -113,13 +115,14 @@ export interface RotationInsight {
 
 export function analyzeRotation(state: TeamState): RotationInsight {
   const lineup = getLineupForRotation(state.lineup, state.currentRotation)
+  const applyLibero = !state.isServing
   const frontRow: RotationInsight['frontRow'] = []
   const backRow: RotationInsight['backRow'] = []
   let setter: RotationInsight['setter'] = null
   let server: Player | null = null
 
   for (const pos of FRONT_ROW) {
-    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId)
+    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId, applyLibero)
     if (effective) {
       frontRow.push({ player: effective.player, position: pos })
       if (effective.player.role === 'S') {
@@ -129,7 +132,7 @@ export function analyzeRotation(state: TeamState): RotationInsight {
   }
 
   for (const pos of BACK_ROW) {
-    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId)
+    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId, applyLibero)
     if (effective) {
       backRow.push({
         player: effective.player,
@@ -147,7 +150,7 @@ export function analyzeRotation(state: TeamState): RotationInsight {
 
   const nextRotation = state.currentRotation === 6 ? 1 : ((state.currentRotation + 1) as CourtPosition)
   const nextLineup = getLineupForRotation(state.lineup, nextRotation)
-  const nextServerEff = getEffectivePlayer(nextLineup, 1, state.players, state.liberoId)
+  const nextServerEff = getEffectivePlayer(nextLineup, 1, state.players, state.liberoId, false)
 
   return {
     setter,
@@ -184,22 +187,43 @@ export function createDefaultPlayers(): Player[] {
 }
 
 export const STORAGE_KEY = 'volley-5x1-state'
-export const CURRENT_LINEUP_VERSION = 2
+export const CURRENT_LINEUP_VERSION = 3
 
-/** Alinhamento R1 para ordem de saque: passos 2,4,6,8,10,12 = Lev, P1, C1, OPP, P2, C2 */
-export function buildServeOrderLineup(players: Player[]): Record<CourtPosition, string | null> {
-  const byRole = (role: PlayerRole) => players.find((p) => p.role === role)
-  const oh1 = players.filter((p) => p.role === 'OH')[0]
-  const oh2 = players.filter((p) => p.role === 'OH')[1]
-  const mb1 = players.filter((p) => p.role === 'MB')[0]
-  const mb2 = players.filter((p) => p.role === 'MB')[1]
+/** Ordem fixa R1: P1 Lev · P2 P1 · P3 C1 · P4 OPP · P5 P2 · P6 C2 */
+export function buildServeOrderLineup(
+  players: Player[],
+  frontPontaId?: string | null,
+  frontCentralId?: string | null,
+): Record<CourtPosition, string | null> {
+  const setter = players.find((p) => p.role === 'S')
+  const opposite = players.find((p) => p.role === 'OPP')
+  const pontas = players.filter((p) => p.role === 'OH')
+  const centrals = players.filter((p) => p.role === 'MB')
+
+  const ponta1Id = frontPontaId ?? pontas[0]?.id ?? null
+  const ponta2Id = pontas.find((p) => p.id !== ponta1Id)?.id ?? pontas[1]?.id ?? null
+  const central1Id = frontCentralId ?? centrals[0]?.id ?? null
+  const central2Id = centrals.find((p) => p.id !== central1Id)?.id ?? centrals[1]?.id ?? null
+
   return {
-    1: byRole('S')?.id ?? null,
-    2: oh1?.id ?? null,
-    3: mb1?.id ?? null,
-    4: byRole('OPP')?.id ?? null,
-    5: oh2?.id ?? null,
-    6: mb2?.id ?? null,
+    1: setter?.id ?? null,
+    2: ponta1Id,
+    3: central1Id,
+    4: opposite?.id ?? null,
+    5: ponta2Id,
+    6: central2Id,
+  }
+}
+
+export function getDefaultFrontChoices(players: Player[]): {
+  frontPontaId: string | null
+  frontCentralId: string | null
+} {
+  const pontas = players.filter((p) => p.role === 'OH')
+  const centrals = players.filter((p) => p.role === 'MB')
+  return {
+    frontPontaId: pontas[0]?.id ?? null,
+    frontCentralId: centrals[0]?.id ?? null,
   }
 }
 
@@ -210,11 +234,15 @@ export function createDefaultLineup(players: Player[]): Record<CourtPosition, st
 export function createInitialState(): TeamState {
   const players = createDefaultPlayers()
   const libero = players.find((p) => p.role === 'L')
+  const { frontPontaId, frontCentralId } = getDefaultFrontChoices(players)
   return {
     teamName: 'Meu Time',
     players,
-    lineup: createDefaultLineup(players),
+    lineup: buildServeOrderLineup(players, frontPontaId, frontCentralId),
     liberoId: libero?.id ?? null,
+    frontPontaId,
+    frontCentralId,
+    opostoInverteComPonteiro: true,
     currentRotation: 1,
     isServing: false,
     setupComplete: false,
@@ -243,11 +271,21 @@ export function loadState(): TeamState {
       const needsLineupMigration =
         !parsed.lineupVersion || parsed.lineupVersion < CURRENT_LINEUP_VERSION
 
+      const frontPontaId =
+        parsed.frontPontaId ?? parsed.lineup?.[2] ?? getDefaultFrontChoices(players).frontPontaId
+      const frontCentralId =
+        parsed.frontCentralId ?? parsed.lineup?.[3] ?? getDefaultFrontChoices(players).frontCentralId
+
       return {
         ...createInitialState(),
         ...parsed,
         players,
-        lineup: needsLineupMigration ? buildServeOrderLineup(players) : parsed.lineup,
+        frontPontaId,
+        frontCentralId,
+        opostoInverteComPonteiro: parsed.opostoInverteComPonteiro ?? true,
+        lineup: needsLineupMigration
+          ? buildServeOrderLineup(players, frontPontaId, frontCentralId)
+          : parsed.lineup,
         lineupVersion: CURRENT_LINEUP_VERSION,
         setupComplete: parsed.setupComplete ?? false,
       }

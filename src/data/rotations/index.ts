@@ -1,7 +1,9 @@
+import type { CourtPosition, RotationPhase } from '../../types'
 import type { RotationStepConfig } from './types'
 import { rotacao01Recepcao } from './rotacao-01-recepcao'
 import { rotacao01Saque } from './rotacao-01-saque'
 import { rotacao02Recepcao } from './rotacao-02-recepcao'
+import { rotacao02RecepcaoAlt } from './rotacao-02-recepcao-alt'
 import { rotacao02Saque } from './rotacao-02-saque'
 import { rotacao03Recepcao } from './rotacao-03-recepcao'
 import { rotacao03Saque } from './rotacao-03-saque'
@@ -12,32 +14,45 @@ import { rotacao05Saque } from './rotacao-05-saque'
 import { rotacao06Recepcao } from './rotacao-06-recepcao'
 import { rotacao06Saque } from './rotacao-06-saque'
 
-/** 12 passos: recepção e saque para cada uma das 6 rotações. */
-export const ROTATION_STEPS: RotationStepConfig[] = [
-  rotacao01Recepcao,
-  rotacao01Saque,
-  rotacao02Recepcao,
-  rotacao02Saque,
-  rotacao03Recepcao,
-  rotacao03Saque,
-  rotacao04Recepcao,
-  rotacao04Saque,
-  rotacao05Recepcao,
-  rotacao05Saque,
-  rotacao06Recepcao,
-  rotacao06Saque,
-]
+/** Monta os 12 passos; passo 3 usa alternativa se oposto inverte com ponteiro. */
+export function buildRotationSteps(opostoInverteComPonteiro = true): RotationStepConfig[] {
+  return [
+    rotacao01Recepcao,
+    rotacao01Saque,
+    opostoInverteComPonteiro ? rotacao02RecepcaoAlt : rotacao02Recepcao,
+    rotacao02Saque,
+    rotacao03Recepcao,
+    rotacao03Saque,
+    rotacao04Recepcao,
+    rotacao04Saque,
+    rotacao05Recepcao,
+    rotacao05Saque,
+    rotacao06Recepcao,
+    rotacao06Saque,
+  ]
+}
 
-export function getStepByIndex(index: number): RotationStepConfig {
-  const safe = ((index % 12) + 12) % 12
-  return ROTATION_STEPS[safe]
+export const ROTATION_STEPS = buildRotationSteps(true)
+
+export function getStepIndexFor(rotation: CourtPosition, phase: RotationPhase): number {
+  return (rotation - 1) * 2 + (phase === 'saque' ? 1 : 0)
+}
+
+export function getStepByIndex(
+  index: number,
+  steps: RotationStepConfig[] = ROTATION_STEPS,
+): RotationStepConfig {
+  const safe = ((index % steps.length) + steps.length) % steps.length
+  return steps[safe]
 }
 
 export function getStepForRotation(
-  rotation: RotationStepConfig['rotation'],
-  phase: RotationStepConfig['phase'],
+  rotation: CourtPosition,
+  phase: RotationPhase,
+  steps: RotationStepConfig[] = ROTATION_STEPS,
 ): RotationStepConfig {
-  return ROTATION_STEPS.find((s) => s.rotation === rotation && s.phase === phase)!
+  const index = getStepIndexFor(rotation, phase)
+  return steps[index]
 }
 
 export type { RotationStepConfig, VisualSpot } from './types'

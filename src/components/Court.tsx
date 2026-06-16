@@ -34,7 +34,8 @@ export function Court({ state }: CourtProps) {
 
   const renderSpot = (pos: CourtPosition) => {
     const layout = POSITION_LAYOUT[pos]
-    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId)
+    const applyLibero = !state.isServing
+    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId, applyLibero)
     const isServer = state.isServing && pos === 1
     const isSetter = effective && isSetterSetting(effective.player, pos)
     const isLibero = effective?.isLiberoSub
@@ -54,7 +55,6 @@ export function Court({ state }: CourtProps) {
               <span className="libero-for">↔ #{effective.replacedPlayer.number}</span>
             )}
             {isServer && <span className="serve-badge">SAQUE</span>}
-            {isSetter && <span className="set-badge">LEV</span>}
           </div>
         ) : (
           <span className="empty-slot">—</span>

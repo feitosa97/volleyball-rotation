@@ -1,13 +1,15 @@
 import type { CourtPosition, Player, PlayerRole, TeamState } from '../types'
 import { COURT_POSITIONS, ROLE_LABELS } from '../types'
-import { isLineupComplete } from '../lib/rotation'
+import { isLineupSetupReady, LineupSetupQuestions } from './LineupSetupQuestions'
 import { useState } from 'react'
 
 interface EscalacaoPageProps {
   state: TeamState
   onTeamNameChange: (name: string) => void
   onPlayerChange: (id: string, updates: Partial<Player>) => void
-  onLineupChange: (position: CourtPosition, playerId: string | null) => void
+  onFrontPontaChange: (playerId: string) => void
+  onFrontCentralChange: (playerId: string) => void
+  onOpostoInverteChange: (value: boolean) => void
   onSwapPositions: (a: CourtPosition, b: CourtPosition) => void
   onLiberoChange: (liberoId: string | null) => void
   onReset: () => void
@@ -19,13 +21,14 @@ export function EscalacaoPage({
   state,
   onTeamNameChange,
   onPlayerChange,
-  onLineupChange,
+  onFrontPontaChange,
+  onFrontCentralChange,
+  onOpostoInverteChange,
   onSwapPositions,
   onLiberoChange,
   onReset,
 }: EscalacaoPageProps) {
   const [swapFrom, setSwapFrom] = useState<CourtPosition | null>(null)
-  const courtPlayers = state.players.filter((p) => p.role !== 'L')
   const liberos = state.players.filter((p) => p.role === 'L')
 
   const handlePositionTap = (pos: CourtPosition) => {
@@ -52,7 +55,7 @@ export function EscalacaoPage({
     <section className="escalacao-page">
       <div className="page-intro">
         <h2>Escalação</h2>
-        <p>Troque posições tocando em duas zonas ou edite o elenco abaixo.</p>
+        <p>Defina quem começa na frente ou troque posições manualmente.</p>
       </div>
 
       <div className="setup-header">
@@ -69,7 +72,29 @@ export function EscalacaoPage({
         </button>
       </div>
 
-      <h3>Trocar posições</h3>
+      <h3>Escalação inicial — Rotação 1</h3>
+      <LineupSetupQuestions
+        state={state}
+        onFrontPontaChange={onFrontPontaChange}
+        onFrontCentralChange={onFrontCentralChange}
+      />
+
+      {!isLineupSetupReady(state) && (
+        <p className="warning">Selecione a ponta e o central que começam na frente.</p>
+      )}
+
+      <div className="toggle-card">
+        <label className="toggle-label">
+          <input
+            type="checkbox"
+            checked={state.opostoInverteComPonteiro}
+            onChange={(e) => onOpostoInverteChange(e.target.checked)}
+          />
+          <span>Oposto inverte com ponteiro?</span>
+        </label>
+      </div>
+
+      <h3>Trocar posições manualmente</h3>
       <p className="setup-hint">
         {swapFrom
           ? `Selecionado P${swapFrom} — toque em outra posição para trocar`
@@ -122,30 +147,6 @@ export function EscalacaoPage({
           </div>
         ))}
       </div>
-
-      <h3>Posições — Rotação 1</h3>
-      <div className="lineup-grid">
-        {COURT_POSITIONS.map((pos) => (
-          <label key={pos} className="lineup-field">
-            <span>P{pos}</span>
-            <select
-              value={state.lineup[pos] ?? ''}
-              onChange={(e) => onLineupChange(pos, e.target.value || null)}
-            >
-              <option value="">— vazio —</option>
-              {courtPlayers.map((p) => (
-                <option key={p.id} value={p.id}>
-                  #{p.number} {p.name} ({p.role})
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
-      </div>
-
-      {!isLineupComplete(state.lineup) && (
-        <p className="warning">Escalação incompleta — preencha as 6 posições.</p>
-      )}
 
       <h3>Líbero</h3>
       <label className="field-label">

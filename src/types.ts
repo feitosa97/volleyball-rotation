@@ -27,6 +27,12 @@ export interface TeamState {
   setupComplete: boolean
   /** Versão do alinhamento base (ordem de saque). */
   lineupVersion?: number
+  /** Ponta na frente (P2 — Ponta 1). */
+  frontPontaId: string | null
+  /** Central na frente (P3 — Central 1). */
+  frontCentralId: string | null
+  /** Usa rotacao-02-recepcao-alt no passo 3. */
+  opostoInverteComPonteiro: boolean
 }
 
 export const ROLE_LABELS: Record<PlayerRole, string> = {

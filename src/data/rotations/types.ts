@@ -17,5 +17,7 @@ export interface RotationStepConfig {
   receiveLine?: CourtPosition[]
   /** Ajuste fino da posição visual por zona (P1–P6). */
   visualOverrides?: Partial<Record<CourtPosition, VisualSpot>>
+  /** Líbero em quadra neste passo (false nos passos 6 e 12). */
+  liberoInCourt: boolean
   notes?: string[]
 }
