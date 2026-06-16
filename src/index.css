@@ -342,6 +342,65 @@ body {
   font-size: 0.85rem;
 }
 
+.lineup-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lineup-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+}
+
+.lineup-summary-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.lineup-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.lineup-summary-list li {
+  display: grid;
+  grid-template-columns: 2rem 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  align-items: center;
+}
+
+.lineup-summary-pos {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.lineup-summary-role {
+  color: var(--text-muted);
+}
+
+.toggle-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+}
+
+.toggle-card .setup-hint {
+  margin: 0.35rem 0 0 1.6rem;
+}
+
 /* Ball choice */
 .ball-choice {
   display: grid;
@@ -478,11 +537,12 @@ body {
 
 .attack-line {
   text-align: center;
-  padding: 0.25rem 0;
+  padding: 0.35rem 0 8.25rem;
   border-bottom: 2px dashed rgba(254, 240, 138, 0.6);
 }
 
 .attack-line span {
+  padding: 0.35rem 0 5.05rem;
   font-size: 0.55rem;
   font-weight: 600;
   color: var(--court-line);
@@ -512,6 +572,7 @@ body {
 }
 
 .half-court-surface {
+  /* Distância entre a rede e a área dos jogadores; aumente top para descer a quadra */
   position: absolute;
   inset: 28px 0 0;
 }

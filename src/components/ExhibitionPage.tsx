@@ -1,26 +1,35 @@
-import { useState } from 'react'
-import { ROTATION_STEPS, getStepByIndex } from '../data/rotations'
+import { useEffect, useMemo, useState } from 'react'
+import { buildRotationSteps, getStepByIndex } from '../data/rotations'
 import type { TeamState } from '../types'
 import { HalfCourt } from './HalfCourt'
 
 interface ExhibitionPageProps {
   state: TeamState
+  initialStepIndex: number
 }
 
-export function ExhibitionPage({ state }: ExhibitionPageProps) {
-  const [stepIndex, setStepIndex] = useState(0)
-  const config = getStepByIndex(stepIndex)
+export function ExhibitionPage({ state, initialStepIndex }: ExhibitionPageProps) {
+  const steps = useMemo(
+    () => buildRotationSteps(state.opostoInverteComPonteiro),
+    [state.opostoInverteComPonteiro],
+  )
+  const [stepIndex, setStepIndex] = useState(initialStepIndex)
+  const config = getStepByIndex(stepIndex, steps)
 
-  const goPrev = () => setStepIndex((i) => (i === 0 ? 11 : i - 1))
-  const goNext = () => setStepIndex((i) => (i === 11 ? 0 : i + 1))
+  useEffect(() => {
+    setStepIndex(initialStepIndex)
+  }, [initialStepIndex])
+
+  useEffect(() => {
+    const max = steps.length - 1
+    if (stepIndex > max) setStepIndex(max)
+  }, [steps.length, stepIndex])
+
+  const goPrev = () => setStepIndex((i) => (i === 0 ? steps.length - 1 : i - 1))
+  const goNext = () => setStepIndex((i) => (i === steps.length - 1 ? 0 : i + 1))
 
   return (
     <section className="exhibition-page">
-      <div className="page-intro">
-        <h2>Exibição — 12 passos</h2>
-        <p>Recepção e saque em cada rotação do sistema 5×1.</p>
-      </div>
-
       <div className="step-header">
         <span className="step-badge">Passo {config.step}/12</span>
         <h3>{config.title}</h3>
@@ -38,7 +47,7 @@ export function ExhibitionPage({ state }: ExhibitionPageProps) {
       )}
 
       <div className="step-picker">
-        {ROTATION_STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <button
             key={s.id}
             type="button"

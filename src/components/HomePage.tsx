@@ -1,13 +1,15 @@
 import type { CourtPosition, Player, PlayerRole, TeamState } from '../types'
-import { COURT_POSITIONS, ROLE_LABELS } from '../types'
-import { isLineupComplete } from '../lib/rotation'
+import { ROLE_LABELS } from '../types'
+import { isLineupSetupReady, LineupSetupQuestions } from './LineupSetupQuestions'
 import { useState } from 'react'
 
 interface HomePageProps {
   state: TeamState
   onTeamNameChange: (name: string) => void
   onPlayerChange: (id: string, updates: Partial<Player>) => void
-  onLineupChange: (position: CourtPosition, playerId: string | null) => void
+  onFrontPontaChange: (playerId: string) => void
+  onFrontCentralChange: (playerId: string) => void
+  onOpostoInverteChange: (value: boolean) => void
   onLiberoChange: (liberoId: string | null) => void
   onCompleteSetup: (rotation: CourtPosition, wonBall: boolean) => void
 }
@@ -18,23 +20,24 @@ export function HomePage({
   state,
   onTeamNameChange,
   onPlayerChange,
-  onLineupChange,
+  onFrontPontaChange,
+  onFrontCentralChange,
+  onOpostoInverteChange,
   onLiberoChange,
   onCompleteSetup,
 }: HomePageProps) {
   const [startingRotation, setStartingRotation] = useState<CourtPosition>(1)
   const [wonBall, setWonBall] = useState<boolean | null>(null)
 
-  const courtPlayers = state.players.filter((p) => p.role !== 'L')
   const liberos = state.players.filter((p) => p.role === 'L')
-  const lineupOk = isLineupComplete(state.lineup)
+  const lineupOk = isLineupSetupReady(state)
   const canFinish = lineupOk && wonBall !== null && state.teamName.trim().length > 0
 
   return (
     <section className="home-page">
       <div className="page-intro">
         <h2>Configuração do time</h2>
-        <p>Cadastre todos os jogadores, incluindo o líbero, e defina a posição inicial conforme o resultado da última bola.</p>
+        <p>Cadastre todos os jogadores, incluindo o líbero, e defina a escalação inicial.</p>
       </div>
 
       <label className="field-label">
@@ -85,31 +88,29 @@ export function HomePage({
       </div>
 
       <h3>Escalação inicial — Rotação 1</h3>
-      <p className="setup-hint">
-        Posicione os 6 jogadores de quadra antes de qualquer rotação.
-      </p>
-      <div className="lineup-grid">
-        {COURT_POSITIONS.map((pos) => (
-          <label key={pos} className="lineup-field">
-            <span>P{pos}</span>
-            <select
-              value={state.lineup[pos] ?? ''}
-              onChange={(e) => onLineupChange(pos, e.target.value || null)}
-            >
-              <option value="">— vazio —</option>
-              {courtPlayers.map((p) => (
-                <option key={p.id} value={p.id}>
-                  #{p.number} {p.name} ({p.role})
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
-      </div>
+      <LineupSetupQuestions
+        state={state}
+        onFrontPontaChange={onFrontPontaChange}
+        onFrontCentralChange={onFrontCentralChange}
+      />
 
       {!lineupOk && (
-        <p className="warning">Preencha as 6 posições de quadra para continuar.</p>
+        <p className="warning">Selecione a ponta e o central que começam na frente.</p>
       )}
+
+      <div className="toggle-card">
+        <label className="toggle-label">
+          <input
+            type="checkbox"
+            checked={state.opostoInverteComPonteiro}
+            onChange={(e) => onOpostoInverteChange(e.target.checked)}
+          />
+          <span>Oposto inverte com ponteiro?</span>
+        </label>
+        <p className="setup-hint">
+          Ativa a formação alternativa da Rotação 2 — Recepção (passo 3).
+        </p>
+      </div>
 
       <h3>Líbero</h3>
       <label className="field-label">
@@ -161,7 +162,7 @@ export function HomePage({
         >
           {([1, 2, 3, 4, 5, 6] as CourtPosition[]).map((r) => (
             <option key={r} value={r}>
-              Rotação {r}
+              Rotação {r} — {wonBall === true ? 'saque' : wonBall === false ? 'recepção' : '…'}
             </option>
           ))}
         </select>

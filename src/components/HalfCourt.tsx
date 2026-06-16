@@ -1,6 +1,7 @@
 import type { CourtPosition, PlayerRole } from '../types'
 import { ROLE_SHORT } from '../types'
 import type { RotationStepConfig } from '../data/rotations'
+import { buildRotationSteps, getStepForRotation } from '../data/rotations'
 import {
   DEFAULT_VISUAL_SPOTS,
   getEffectivePlayer,
@@ -22,21 +23,32 @@ function roleClass(role: PlayerRole): string {
 export function HalfCourt({ state, config, showNextServer = true }: HalfCourtProps) {
   const lineup = getLineupForRotation(state.lineup, config.rotation)
   const isServePhase = config.phase === 'saque'
+  const applyLibero = config.liberoInCourt
+  const receiveLine = new Set(config.receiveLine ?? [])
+  const steps = buildRotationSteps(state.opostoInverteComPonteiro)
 
   const nextRotation = config.rotation === 6 ? 1 : ((config.rotation + 1) as CourtPosition)
   const nextLineup = getLineupForRotation(state.lineup, nextRotation)
-  const nextServer = getEffectivePlayer(nextLineup, 1, state.players, state.liberoId)
+  const nextSaqueStep = getStepForRotation(nextRotation, 'saque', steps)
+  const nextServer = getEffectivePlayer(
+    nextLineup,
+    1,
+    state.players,
+    state.liberoId,
+    nextSaqueStep.liberoInCourt,
+  )
 
   const spots = ([4, 3, 2, 5, 6, 1] as CourtPosition[]).map((pos) => {
-    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId)
+    const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId, applyLibero)
     const visual = config.visualOverrides?.[pos] ?? DEFAULT_VISUAL_SPOTS[pos]
     const isServer = isServePhase && pos === 1
     const isSetter = effective && isSetterSetting(effective.player, pos)
+    const inReceiveLine = config.phase === 'recepcao' && receiveLine.has(pos)
 
     return (
       <div
         key={pos}
-        className={`half-spot ${effective ? 'occupied' : 'empty'} ${isServer ? 'serving' : ''} ${isSetter ? 'setter-spot' : ''}`}
+        className={`half-spot ${effective ? 'occupied' : 'empty'} ${isServer ? 'serving' : ''} ${isSetter ? 'setter-spot' : ''} ${inReceiveLine ? 'receive-line' : ''}`}
         style={{ left: `${visual.x}%`, top: `${visual.y}%` }}
       >
         <span className="spot-label">P{pos}</span>
@@ -46,7 +58,6 @@ export function HalfCourt({ state, config, showNextServer = true }: HalfCourtPro
             <span className="player-name">{effective.player.name}</span>
             <span className="player-role">{ROLE_SHORT[effective.player.role]}</span>
             {isServer && <span className="serve-badge">SAQUE</span>}
-            {isSetter && <span className="set-badge">LEV</span>}
           </div>
         ) : (
           <span className="empty-slot">—</span>
@@ -70,32 +81,6 @@ export function HalfCourt({ state, config, showNextServer = true }: HalfCourtPro
         </div>
         <div className="half-court-surface">{spots}</div>
       </div>
-
-      {isServePhase && (
-        <div className="server-info">
-          <div className="server-current">
-            <span className="server-label">Sacador</span>
-            {(() => {
-              const s = getEffectivePlayer(lineup, 1, state.players, state.liberoId)
-              return s ? (
-                <strong>#{s.player.number} {s.player.name}</strong>
-              ) : (
-                <span>—</span>
-              )
-            })()}
-          </div>
-        </div>
-      )}
-
-      {config.phase === 'recepcao' && showNextServer && nextServer && (
-        <div className="server-info">
-          <div className="server-next">
-            <span className="server-label">Próximo saque</span>
-            <strong>#{nextServer.player.number} {nextServer.player.name}</strong>
-            <span className="server-hint">(se ganharmos o ponto → R{nextRotation})</span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

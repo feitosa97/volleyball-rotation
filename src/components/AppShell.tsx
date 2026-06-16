@@ -10,10 +10,12 @@ import type { CourtPosition, Player } from '../types'
 interface AppShellProps {
   page: AppPage
   state: TeamState
+  exhibitionStepIndex: number
   onNavigate: (page: AppPage) => void
   onUpdate: (patch: Partial<TeamState>) => void
   onPlayerChange: (id: string, updates: Partial<Player>) => void
-  onLineupChange: (position: CourtPosition, playerId: string | null) => void
+  onFrontPontaChange: (playerId: string) => void
+  onFrontCentralChange: (playerId: string) => void
   onSwapPositions: (a: CourtPosition, b: CourtPosition) => void
   onReset: () => void
   onCompleteSetup: (rotation: CourtPosition, wonBall: boolean) => void
@@ -22,10 +24,12 @@ interface AppShellProps {
 export function AppShell({
   page,
   state,
+  exhibitionStepIndex,
   onNavigate,
   onUpdate,
   onPlayerChange,
-  onLineupChange,
+  onFrontPontaChange,
+  onFrontCentralChange,
   onSwapPositions,
   onReset,
   onCompleteSetup,
@@ -51,7 +55,9 @@ export function AppShell({
             state={state}
             onTeamNameChange={(teamName) => onUpdate({ teamName })}
             onPlayerChange={onPlayerChange}
-            onLineupChange={onLineupChange}
+            onFrontPontaChange={onFrontPontaChange}
+            onFrontCentralChange={onFrontCentralChange}
+            onOpostoInverteChange={(opostoInverteComPonteiro) => onUpdate({ opostoInverteComPonteiro })}
             onLiberoChange={(liberoId) => onUpdate({ liberoId })}
             onCompleteSetup={onCompleteSetup}
           />
@@ -61,14 +67,16 @@ export function AppShell({
             state={state}
             onTeamNameChange={(teamName) => onUpdate({ teamName })}
             onPlayerChange={onPlayerChange}
-            onLineupChange={onLineupChange}
+            onFrontPontaChange={onFrontPontaChange}
+            onFrontCentralChange={onFrontCentralChange}
+            onOpostoInverteChange={(opostoInverteComPonteiro) => onUpdate({ opostoInverteComPonteiro })}
             onSwapPositions={onSwapPositions}
             onLiberoChange={(liberoId) => onUpdate({ liberoId })}
             onReset={onReset}
           />
         )}
         {effectivePage === 'exibicao' && (
-          <ExhibitionPage state={state} />
+          <ExhibitionPage state={state} initialStepIndex={exhibitionStepIndex} />
         )}
         {effectivePage === 'partida' && (
           <MatchPage
