@@ -1,7 +1,6 @@
 import type { CourtPosition, PlayerRole } from '../types'
 import { ROLE_SHORT } from '../types'
 import type { RotationStepConfig } from '../data/rotations'
-import { buildRotationSteps, getStepForRotation } from '../data/rotations'
 import {
   DEFAULT_VISUAL_SPOTS,
   getEffectivePlayer,
@@ -13,30 +12,17 @@ import type { TeamState } from '../types'
 interface HalfCourtProps {
   state: TeamState
   config: RotationStepConfig
-  showNextServer?: boolean
 }
 
 function roleClass(role: PlayerRole): string {
   return `role-${role.toLowerCase()}`
 }
 
-export function HalfCourt({ state, config, showNextServer = true }: HalfCourtProps) {
+export function HalfCourt({ state, config }: HalfCourtProps) {
   const lineup = getLineupForRotation(state.lineup, config.rotation)
   const isServePhase = config.phase === 'saque'
   const applyLibero = config.liberoInCourt
   const receiveLine = new Set(config.receiveLine ?? [])
-  const steps = buildRotationSteps(state.opostoInverteComPonteiro)
-
-  const nextRotation = config.rotation === 6 ? 1 : ((config.rotation + 1) as CourtPosition)
-  const nextLineup = getLineupForRotation(state.lineup, nextRotation)
-  const nextSaqueStep = getStepForRotation(nextRotation, 'saque', steps)
-  const nextServer = getEffectivePlayer(
-    nextLineup,
-    1,
-    state.players,
-    state.liberoId,
-    nextSaqueStep.liberoInCourt,
-  )
 
   const spots = ([4, 3, 2, 5, 6, 1] as CourtPosition[]).map((pos) => {
     const effective = getEffectivePlayer(lineup, pos, state.players, state.liberoId, applyLibero)
